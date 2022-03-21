@@ -1,40 +1,129 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import { Client } from '@notionhq/client'
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import { Client } from "@notionhq/client";
 
-export default function Home({project}) {
-  const notion=new Client({
-    auth:process.env.NOTION_API_KEY,
-  })
-  function createSuggestion() {
-    notion.pages.create({
-      parent: {
-        database_id: process.env.NOTION_DB,
-      },
-      properties: {
-        title: {
-          title: [
-            {
-              text: {
-                content: "new suggestion",
-              },
+const userData = (content) => {
+  return {
+    parent: {
+      database_id: process.env.NEXT_PUBLIC_NOTION_DB,
+    },
+    properties: {
+      title: {
+        title: [
+          {
+            text: {
+              content,
             },
-          ],
-        },
-        Description: {
-          rich_text: [
-            {
-              text: {
-                content: 'A dark green leafy vegetable',
-              },
-            },
-          ],
-        },
+          },
+        ],
       },
+      Description: {
+        rich_text: [
+          {
+            text: {
+              content,
+            },
+          },
+        ],
+      },
+      Project: {
+        checkbox: true,
+      },
+      Votes: {
+        number: 100,
+      },
+    },
+  };
+};
+
+const updateData = (content) => {
+  return {
+    page_id:'dd9a896e-dbfc-4350-8289-ae044b4005b1',
+    archived: false,
+    properties: {
+      title: {
+        title: [
+          {
+            text: {
+              content,
+            },
+          },
+        ],
+      },
+      Description: {
+        rich_text: [
+          {
+            text: {
+              content,
+            },
+          },
+        ],
+      },
+      Project: {
+        checkbox: true,
+      },
+      Votes: {
+        number: 20,
+      },
+    },
+  };
+}
+const deleteData = (content) => {
+  return {
+    page_id:'dd9a896e-dbfc-4350-8289-ae044b4005b1',
+    archived: true,
+    properties: {
+      title: {
+        title: [
+          {
+            text: {
+              content,
+            },
+          },
+        ],
+      },
+      Description: {
+        rich_text: [
+          {
+            text: {
+              content,
+            },
+          },
+        ],
+      },
+      Project: {
+        checkbox: true,
+      },
+      Votes: {
+        number: 20,
+      },
+    },
+  };
+}
+
+
+export default function Home({ project }) {
+  const createSuggestion = async () => {
+    await fetch("/api/hello", {
+      method: "POST",
+      body: JSON.stringify(userData('naya suggestion banaya hai')),
     });
+  };
+  const updateSuggestion=async ()=>{
+    await fetch("/api/update",{
+      method:"PATCH",
+      body:JSON.stringify(updateData('suggestion')),
+    })
+  }
+  const deleteSuggestion=async ()=>{
+    await fetch("/api/update",{
+      method:"DELETE",
+      body:JSON.stringify(deleteData('suggestion deleted')),
+    })
   }
   console.log(project)
+
   return (
     <div className={styles.container}>
       <Head>
@@ -44,14 +133,12 @@ export default function Home({project}) {
       </Head>
       <main className={styles.main}>
         <button onClick={createSuggestion}>create new suggestion</button>
+        <button onClick={updateSuggestion}>update suggestion</button>
+        <button onClick={deleteSuggestion}>delete suggestion</button>
         <div className={styles.grid}>
-          {
-            project.map(item=>(
-              <a key={item.id}>
-                {item.id}
-              </a>
-            ))
-          }
+          {project.map((item) => (
+            <a key={item.id}>{item.id}</a>
+          ))}
         </div>
       </main>
 
@@ -61,27 +148,27 @@ export default function Home({project}) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <span className={styles.logo}>
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
       </footer>
     </div>
-  )
+  );
 }
 
 export async function getStaticProps() {
-  const notion=new Client({
-    auth:process.env.NOTION_API_KEY,
-  })
-  const res=await notion.databases.query({
-    database_id:process.env.NOTION_DB,
-  })
-  console.log(res.results)
-  return{
-    props:{
-      project:res.results
-    }
-  }
+  const notion = new Client({
+    auth: process.env.NEXT_PUBLIC_NOTION_API_KEY,
+  });
+  const res = await notion.databases.query({
+    database_id: process.env.NEXT_PUBLIC_NOTION_DB,
+  });
+  // console.log(res.results);
+  return {
+    props: {
+      project: res.results,
+    },
+  };
 }
